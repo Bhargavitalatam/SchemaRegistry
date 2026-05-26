@@ -1,0 +1,13 @@
+{
+  "apiKey": "a-secure-test-api-key-12345",
+  "seededSubjects": [
+    {
+      "name": "user-profile",
+      "versionCount": 2
+    },
+    {
+      "name": "order-event",
+      "versionCount": 1
+    }
+  ]
+}

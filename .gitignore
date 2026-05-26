@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.env
+*.log
+postgres_data/
+.DS_Store
+test-results/
+playwright-report/
+backend/node_modules/
+frontend/node_modules/
+frontend/dist/

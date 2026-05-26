@@ -1,0 +1,15 @@
+{
+  "subject": "user-profile",
+  "version": 2,
+  "compatibility_mode": "BACKWARD",
+  "schema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "required": ["userId"],
+    "properties": {
+      "userId": { "type": "string" },
+      "displayName": { "type": "string" },
+      "status": { "type": "string", "default": "active" }
+    }
+  }
+}
