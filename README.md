@@ -55,7 +55,6 @@ docker compose up --build
 | Service | URL |
 |---------|-----|
 | **UI** | http://localhost:8080 |
-| **API** | http://localhost:3001 |
 | **Health** | http://localhost:3001/health |
 
 Default API key (see `submission.json`): `a-secure-test-api-key-12345`  
