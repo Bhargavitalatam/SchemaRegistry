@@ -1,5 +1,7 @@
 require('dotenv').config();
 
+const fs = require('fs');
+const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const { migrate } = require('./db/migrate');
@@ -10,6 +12,8 @@ const validateRouter = require('./routes/validate');
 
 const app = express();
 const PORT = parseInt(process.env.API_PORT || process.env.PORT || '3001', 10);
+const frontendDistPath = path.resolve(__dirname, '..', '..', 'frontend', 'dist');
+const hasFrontendBuild = fs.existsSync(frontendDistPath);
 
 app.use(cors());
 app.use(express.json({ limit: '2mb' }));
@@ -27,6 +31,23 @@ app.use('/api/schemas', schemasRouter);
 app.use('/api/validate', validateRouter);
 app.use('/schemas', schemasRouter);
 app.use('/validate', validateRouter);
+
+if (hasFrontendBuild) {
+  app.use(express.static(frontendDistPath));
+}
+
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api/') || req.path.startsWith('/schemas') || req.path.startsWith('/validate') || req.path === '/health') {
+    return next();
+  }
+
+  if (hasFrontendBuild) {
+    res.sendFile(path.join(frontendDistPath, 'index.html'));
+    return;
+  }
+
+  res.status(404).send('Frontend build not found');
+});
 
 app.use((err, req, res, next) => {
   const status = err.status || 500;
@@ -51,10 +72,10 @@ async function start() {
     }
   }
 
-  const seedDir = process.env.SEED_DIR || '/app/seeds';
+  const seedDir = process.env.SEED_DIR || path.resolve(__dirname, '..', '..', 'seeds');
   await seedFromDirectory(seedDir);
 
-  app.listen(PORT, () => {
+  app.listen(PORT, '0.0.0.0', () => {
     console.log(`Schema Registry API listening on port ${PORT}`);
   });
 }
