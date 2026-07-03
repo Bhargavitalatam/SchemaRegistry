@@ -60,28 +60,39 @@ app.use((err, req, res, next) => {
 });
 
 async function start() {
-  const maxRetries = parseInt(process.env.DB_STARTUP_RETRIES || '120', 10);
-  const retryDelayMs = parseInt(process.env.DB_STARTUP_RETRY_DELAY_MS || '3000', 10);
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      await migrate();
-      break;
-    } catch (err) {
-      if (i === maxRetries - 1) throw err;
-      console.log(`Waiting for database... (${i + 1}/${maxRetries})`);
-      await new Promise((r) => setTimeout(r, retryDelayMs));
-    }
-  }
-
-  const seedDir = process.env.SEED_DIR || path.resolve(__dirname, '..', '..', 'seeds');
-  await seedFromDirectory(seedDir);
-
-  app.listen(PORT, '0.0.0.0', () => {
+  const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`Schema Registry API listening on port ${PORT}`);
+  });
+
+  server.on('error', (err) => {
+    console.error('Failed to start server', err);
+    process.exit(1);
+  });
+
+  const runDatabaseSetup = async () => {
+    const maxRetries = parseInt(process.env.DB_STARTUP_RETRIES || '120', 10);
+    const retryDelayMs = parseInt(process.env.DB_STARTUP_RETRY_DELAY_MS || '3000', 10);
+
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        await migrate();
+        const seedDir = process.env.SEED_DIR || path.resolve(__dirname, '..', '..', 'seeds');
+        await seedFromDirectory(seedDir);
+        return;
+      } catch (err) {
+        if (i === maxRetries - 1) {
+          console.error('Database setup failed after retries', err);
+          return;
+        }
+        console.log(`Waiting for database... (${i + 1}/${maxRetries})`);
+        await new Promise((r) => setTimeout(r, retryDelayMs));
+      }
+    }
+  };
+
+  runDatabaseSetup().catch((err) => {
+    console.error('Database setup crashed', err);
   });
 }
 
-start().catch((err) => {
-  console.error('Failed to start server', err);
-  process.exit(1);
-});
+start();
