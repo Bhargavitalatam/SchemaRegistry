@@ -1,3 +1,8 @@
+databases:
+  - name: schema-registry-db
+    databaseName: schema_registry
+    user: schema_registry
+
 services:
   - type: web
     name: schema-registry-api
@@ -19,9 +24,3 @@ services:
         fromDatabase:
           name: schema-registry-db
           property: connectionString
-
-  - type: pserv
-    name: schema-registry-db
-    env: postgres
-    plan: free
-    ipAllowList: []
