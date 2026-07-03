@@ -60,7 +60,8 @@ app.use((err, req, res, next) => {
 });
 
 async function start() {
-  const maxRetries = 30;
+  const maxRetries = parseInt(process.env.DB_STARTUP_RETRIES || '120', 10);
+  const retryDelayMs = parseInt(process.env.DB_STARTUP_RETRY_DELAY_MS || '3000', 10);
   for (let i = 0; i < maxRetries; i++) {
     try {
       await migrate();
@@ -68,7 +69,7 @@ async function start() {
     } catch (err) {
       if (i === maxRetries - 1) throw err;
       console.log(`Waiting for database... (${i + 1}/${maxRetries})`);
-      await new Promise((r) => setTimeout(r, 2000));
+      await new Promise((r) => setTimeout(r, retryDelayMs));
     }
   }
 
